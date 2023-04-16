@@ -16,7 +16,8 @@
     ".": {
       "import": "./dist/react-use-camera.es.js",
       "require": "./dist/react-use-camera.umd.js"
-    }
+    },
+    "./dist/style.css": "./dist/style.css"
   },
   "main": "./dist/react-use-camera.umd.js",
   "module": "./dist/react-use-camera.es.js",
