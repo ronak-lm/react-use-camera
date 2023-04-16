@@ -1,3 +1,5 @@
+import "./style.css";
+
 export { useCamera } from "./useCamera";
 
 export { default as Camera } from "./Camera";

@@ -13,8 +13,6 @@ import {
 import { useCamera } from "./useCamera";
 import { CameraElement, CameraHandle } from "./types";
 
-import styles from "./Camera.module.css";
-
 export type CameraProps = ComponentProps<"div"> & {
   fit?: "fill" | "contain" | "cover" | "blur";
   constraints?: MediaTrackConstraints;
@@ -100,7 +98,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
   if (error) {
     return (
-      <div ref={ref} className={`${styles.root} ${className}`} {...otherProps}>
+      <div ref={ref} className={`usecam-root ${className}`} {...otherProps}>
         {errorLayout}
       </div>
     );
@@ -108,22 +106,22 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
   // 4 - SUCCESS JSX
 
-  let objectFitClass = styles.fill;
+  let objectFitClass = "usecam-fill";
   if (fit === "contain" || fit === "blur") {
-    objectFitClass = styles.contain;
+    objectFitClass = "usecam-contain";
   } else if (fit === "cover") {
-    objectFitClass = styles.cover;
+    objectFitClass = "usecam-cover";
   }
 
   return (
-    <div ref={ref} className={`${styles.root} ${className}`} {...otherProps}>
+    <div ref={ref} className={`usecam-root ${className}`} {...otherProps}>
       {/* Camera Blurred Background */}
       {fit === "blur" && (
         <video
           ref={videoBlurRef}
-          className={`${styles.video} ${styles.blur} ${styles.cover} ${
-            isFront ? styles.flipAndZoom : styles.zoom
-          } ${imageDataURL !== undefined ? styles.hide : ""} ${videoBlurClassName}`}
+          className={`usecam-video usecam-blur usecam-cover ${
+            isFront ? "usecam-flip-zoom" : "usecam-zoom"
+          } ${imageDataURL !== undefined ? "usecam-hide" : ""} ${videoBlurClassName}`}
           autoPlay
           playsInline
           {...otherVideoBlurProps}
@@ -133,8 +131,8 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
       {/* Camera */}
       <video
         ref={videoRef}
-        className={`${styles.video} ${objectFitClass} ${isFront ? styles.flip : ""} ${
-          imageDataURL !== undefined ? styles.hide : ""
+        className={`usecam-video ${objectFitClass} ${isFront ? "usecam-flip" : ""} ${
+          imageDataURL !== undefined ? "usecam-hide" : ""
         } ${videoClassName}`}
         autoPlay
         playsInline
@@ -144,9 +142,9 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
       {/* Image Preview: Blurred Background */}
       {fit === "blur" && (
         <img
-          className={`${styles.video} ${styles.zoom} ${styles.blur} ${styles.cover} ${
-            imageDataURL === undefined ? styles.hide : ""
-          } ${imgBlurClassName}}`}
+          className={`usecam-video usecam-zoom usecam-blur usecam-cover ${
+            imageDataURL === undefined ? "usecam-hide" : ""
+          } ${imgBlurClassName}`}
           src={imageDataURL}
           {...otherImgBlurProps}
         />
@@ -154,8 +152,8 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
       {/* Image Preview */}
       <img
-        className={`${styles.video} ${objectFitClass} ${
-          imageDataURL === undefined ? styles.hide : ""
+        className={`usecam-video ${objectFitClass} ${
+          imageDataURL === undefined ? "usecam-hide" : ""
         } ${imgClassName}`}
         src={imageDataURL}
         {...otherImgProps}
