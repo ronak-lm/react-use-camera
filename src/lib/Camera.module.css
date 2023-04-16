@@ -1,0 +1,50 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fit Utils */
+
+.cover {
+  object-fit: cover;
+}
+
+.contain {
+  object-fit: contain;
+}
+
+.fill {
+  object-fit: fill;
+}
+
+/* Other Utils */
+
+.flip {
+  transform: scaleX(-1);
+}
+
+.zoom {
+  transform: scaleX(1.2) scaleY(1.2);
+}
+
+.flipAndZoom {
+  transform: scaleX(-1.2) scaleY(1.2);
+}
+
+.blur {
+  filter: blur(12px);
+}
+
+.hide {
+  pointer-events: none;
+  opacity: 0;
+}
