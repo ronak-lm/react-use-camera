@@ -19,7 +19,7 @@
     "declarationMap": true,
     "baseUrl": ".",
     "paths": {
-      "react-use-camera": ["src/Camera/index.ts"]
+      "react-use-camera": ["src/lib/index.ts"]
     },
     "plugins": [{ "name": "typescript-plugin-css-modules" }]
   },
