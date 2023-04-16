@@ -13,6 +13,8 @@ import {
 import { useCamera } from "./useCamera";
 import { CameraElement, CameraHandle } from "./types";
 
+import "./style.css";
+
 export type CameraProps = ComponentProps<"div"> & {
   fit?: "fill" | "contain" | "cover" | "blur";
   constraints?: MediaTrackConstraints;
