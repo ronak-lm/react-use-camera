@@ -25,6 +25,10 @@ export default function App() {
         constraints={{
           facingMode: facingMode,
         }}
+        onError={(error) => {
+          alert((error as any).message);
+        }}
+        errorLayout={<div>Camera Error</div>}
       />
 
       <hr />

@@ -19,6 +19,8 @@ export type CameraProps = ComponentProps<"div"> & {
   fit?: "fill" | "contain" | "cover" | "blur";
   constraints?: MediaTrackConstraints;
   errorLayout?: ReactNode;
+  onError?: (error: unknown) => void;
+
   videoProps?: ComponentProps<"video">;
   videoBlurProps?: ComponentProps<"video">;
   imgProps?: ComponentProps<"img">;
@@ -30,11 +32,14 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     className = "",
     fit = "contain",
     constraints = {},
+    errorLayout,
+    onError,
+
     videoProps = {},
     videoBlurProps = {},
     imgProps = {},
     imgBlurProps = {},
-    errorLayout,
+
     ...otherProps
   },
   ref
@@ -57,6 +62,10 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     if (videoRef.current) videoRef.current.srcObject = stream;
     if (videoBlurRef.current && fit === "blur") videoBlurRef.current.srcObject = stream;
   }, [stream, fit]);
+
+  useEffect(() => {
+    if (error) onError?.(error);
+  }, [error, onError]);
 
   const isFront = useMemo(() => {
     // Check if the camera is front facing
