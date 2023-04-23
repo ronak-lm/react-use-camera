@@ -30,7 +30,7 @@ import { useRef } from "react";
 import { Camera, CameraElement } from "react-use-camera";
 
 export default function App() {
-  const cameraRef = useRef < CameraElement > null;
+  const cameraRef = useRef<CameraElement>(null);
 
   const handleCapture = async () => {
     const imageData = await cameraRef.current?.capture();
@@ -74,7 +74,7 @@ export default function App() {
 - **constraints**
 
   - Type: [`MediaTrackConstraints`](https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints)
-  - Default: `{ facingMode:  "user", width: { ideal:  1440 }, height: { ideal:  1080 }}`
+  - Default: `{ facingMode: "user", width: { ideal:  1440 }, height: { ideal:  1080 }}`
   - Notes:
     - If you want to select the front or back camera, you will need to pass `facingMode` as `user` or `environment` respectively. Default is set to `user` i.e. the front camera.
 
@@ -110,13 +110,13 @@ export const MyCameraComponent = () => {
     videoRef.current.srcObject = stream;
   }, [stream]);
 
-    // Handle capturing images
+  // Handle capturing images
 
   const handleCapture = () => {
-    const capturedData = await capture({ mirror: false }); /* Pass true if you want to mirror the captured image (recommended for front camera) */
+    const capturedData = await capture({ mirror: false }); // Pass true if you want to mirror the captured image (recommended for front camera)
     console.log("URL:" + capturedData.url);
     console.log("Blob: " + capturedData.blob);
-  }
+  };
 
   // Your JSX
 
