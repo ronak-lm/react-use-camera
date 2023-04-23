@@ -7,10 +7,12 @@ The lightweight library _`(1.9kb minified + gzipped)`_ to add camera & photo cap
 # Install
 
 #### npm
-  npm i react-use-camera
+
+    npm i react-use-camera
 
 #### yarn
-  yarn add react-use-camera
+
+    yarn add react-use-camera
 
 # Instructions
 
@@ -45,9 +47,7 @@ export default function App() {
       <Camera
         ref={cameraRef}
         className="your-classes-here"
-        style={{
-            /* width, height, etc */
-        }}
+        style={/* width, height, etc */}
         errorLayout={<div>Oops!</div>}
       />
 
@@ -62,6 +62,7 @@ export default function App() {
 ### Props
 
 - **fit**
+
   - Type: `fill | contain | cover | blur`
   - Default: `contain`
   - Notes:
@@ -71,12 +72,14 @@ export default function App() {
     - `blur` will work similar to contain BUT instead of empty spaces around the camera, it will show a blurred version of the camera stream as the background.
 
 - **constraints**
+
   - Type: [`MediaTrackConstraints`](https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints)
   - Default: `{ facingMode:  "user", width: { ideal:  1440 }, height: { ideal:  1080 }}`
   - Notes:
     - If you want to select the front or back camera, you will need to pass `facingMode` as `user` or `environment` respectively. Default is set to `user` i.e. the front camera.
 
 - **errorLayout**
+
   - Type: [`ReactNode | JSX`](https://reactnative.dev/docs/react-node)
   - Default: `undefined`
   - Notes: This layout will be shown instead of the camera stream in case of an error. For example:
@@ -96,42 +99,43 @@ import { useEffect, useRef } from "react";
 import { useCamera } from "react-use-camera";
 
 export const MyCameraComponent = () => {
-	// Setup the video stream
+  // Setup the video stream
 
-	const { stream, error, capture } = useCamera({ /* MediaTrackConstraints */ });
+  const { stream, error, capture } = useCamera({ /* MediaTrackConstraints */ });
 
-	const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-	useEffect(() => {
-		if (!stream || !videoRef.current) return;
-		videoRef.current.srcObject = stream;
-	}, [stream]);
+  useEffect(() => {
+    if (!stream || !videoRef.current) return;
+    videoRef.current.srcObject = stream;
+  }, [stream]);
 
     // Handle capturing images
 
-	const handleCapture = () => {
-		const capturedData = await capture({ mirror: false }); /* Pass true if you want to mirror the captured image (recommended for front camera) */
-		console.log("URL:" + capturedData.url);
-		console.log("Blob: " + capturedData.blob);
-	}
+  const handleCapture = () => {
+    const capturedData = await capture({ mirror: false }); /* Pass true if you want to mirror the captured image (recommended for front camera) */
+    console.log("URL:" + capturedData.url);
+    console.log("Blob: " + capturedData.blob);
+  }
 
-	// Your JSX
+  // Your JSX
 
-	if (error) {
-		return <div>Oops!</div>
-	}
-	return (
-		<div>
-			<video
-				ref={videoRef}
-				autoPlay
-				playsInline
-			/>
-			<button onClick={handleCapture}>Capture</button>
-		</div>
-	);
+  if (error) {
+    return <div>Oops!</div>
+  }
+  return (
+    <div>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+      />
+      <button onClick={handleCapture}>Capture</button>
+    </div>
+  );
 }
 ```
 
 ## License
+
 MIT

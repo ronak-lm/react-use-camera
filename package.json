@@ -1,7 +1,7 @@
 {
   "name": "react-use-camera",
   "author": "Ronak Manglani <ronak_lm@outlook.com>",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
