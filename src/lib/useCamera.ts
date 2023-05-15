@@ -7,7 +7,7 @@ const defaultConstraints: MediaTrackConstraints = {
   height: { ideal: 1080 },
 };
 
-export const useCamera = (customConstraints: MediaTrackConstraints = {}) => {
+export const useCamera = (customConstraints?: MediaTrackConstraints) => {
   // 1 - SETUP / MERGE CONSTRAINTS
   const constraints = useMemo(() => {
     return {

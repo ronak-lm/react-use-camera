@@ -31,7 +31,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   {
     className = "",
     fit = "contain",
-    constraints = {},
+    constraints,
     errorLayout,
     onError,
 
@@ -69,7 +69,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
   const isFront = useMemo(() => {
     // Check if the camera is front facing
-    const { facingMode } = constraints;
+    const { facingMode } = constraints || {};
     if (Array.isArray(facingMode)) {
       return facingMode.includes("user");
     } else if (typeof facingMode === "string") {
