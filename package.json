@@ -1,30 +1,36 @@
 {
   "name": "react-use-camera",
+  "description": "Lightweight (1.9kb) camera component with photo capture functionality",
   "author": "Ronak Manglani <ronak_lm@outlook.com>",
-  "version": "1.0.5",
-  "type": "module",
+  "version": "1.0.7",
+  "keywords": [
+    "react",
+    "cam",
+    "camera",
+    "webcam",
+    "camera component",
+    "selfie",
+    "mediaDevices",
+    "getUserMedia",
+    "WebRTC"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ronak-lm/react-use-camera.git"
   },
+  "type": "module",
+  "main": "dist/react-use-camera.umd.js",
+  "module": "dist/react-use-camera.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "format": "prettier --write ./src"
   },
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": {
-      "import": "./dist/react-use-camera.es.js",
-      "require": "./dist/react-use-camera.umd.js"
-    }
-  },
-  "main": "./dist/react-use-camera.umd.js",
-  "module": "./dist/react-use-camera.es.js",
-  "types": "./dist/index.d.ts",
   "devDependencies": {
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
