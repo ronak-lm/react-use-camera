@@ -57,18 +57,28 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   const videoBlurRef = useRef<HTMLVideoElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Attach the stream to the video element
   useEffect(() => {
     if (!stream) return;
     if (videoRef.current) videoRef.current.srcObject = stream;
     if (videoBlurRef.current && fit === "blur") videoBlurRef.current.srcObject = stream;
   }, [stream, fit]);
 
+  // Emit the error to the parent component
   useEffect(() => {
     if (error) onError?.(error);
-  }, [error, onError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
+  // Clean up the stream when the component unmounts
+  useEffect(() => {
+    return () => {
+      stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, [stream]);
+
+  // Check if the camera is front facing
   const isFront = useMemo(() => {
-    // Check if the camera is front facing
     const { facingMode } = constraints || {};
     if (Array.isArray(facingMode)) {
       return facingMode.includes("user");
