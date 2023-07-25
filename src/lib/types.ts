@@ -1,5 +1,6 @@
 export type CameraHandle = {
   capture: (settings?: CaptureSettings) => Promise<CaptureReturnType | undefined>;
+  setCaptured: (url: string) => void;
   clear: () => void;
 };
 
