@@ -101,6 +101,10 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     return capturedData;
   }, [capture, isFront]);
 
+  const handleSetCaptured = useCallback((url: string) => {
+    setImageDataURL(url);
+  }, []);
+
   const handleClear = useCallback(() => {
     setImageDataURL(undefined);
   }, []);
@@ -110,9 +114,10 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     ref as ForwardedRef<CameraHandle>,
     () => ({
       capture: handleCapture,
+      setCaptured: handleSetCaptured,
       clear: handleClear,
     }),
-    [handleCapture, handleClear]
+    [handleCapture, handleSetCaptured, handleClear]
   );
 
   // 3 - ERROR JSX
