@@ -63,8 +63,10 @@ export const useCamera = (customConstraints?: MediaTrackConstraints) => {
 
         // Create a video element and play the stream on it
         const video = document.createElement("video");
-        video.srcObject = stream;
+        video.playsInline = true;
+        video.autoplay = true;
         video.muted = true;
+        video.srcObject = stream;
         video.play();
 
         // When the video is ready, draw it on a canvas
