@@ -33,7 +33,7 @@ export default function App() {
   const cameraRef = useRef<CameraElement>(null);
 
   const handleCapture = async () => {
-    const imageData = await cameraRef.current?.capture();
+    const imageData = await cameraRef.current?.capture(); // Camera view will pause after capture
     // imageData.url can be used as src for an <img/> tag
     // imageData.blob contains a blob string to send to your server
   };
@@ -92,46 +92,38 @@ export default function App() {
 
 ## The useCamera() Hook
 
-This give you no UI. You just get a `MediaStream` instance along with a `capture()` function. You can attach the stream to a `<video />` tag and call the `capture()` function when you need to.
+This give you no UI. You just get a `MediaStream` instance that you have to attach to a `<video />` tag.
 
 ```jsx
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCamera } from "react-use-camera";
 
-export const MyCameraComponent = () => {
-  // Setup the video stream
-
-  const { stream, error, capture } = useCamera({ /* MediaTrackConstraints */ });
-
+export const MyCustomCameraComponent = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const { startCamera, stopCamera } = useCamera();
+  const [stream, setStream] = useState<MediaStream>();
+
   useEffect(() => {
-    if (!stream || !videoRef.current) return;
-    videoRef.current.srcObject = stream;
-  }, [stream]);
+    // Start the camera stream when component mounts
+    startCamera({ /* MediaTrackConstraints */ }).then((stream) => {
+      setStream(stream);
+      videoRef.current!.srcObject = stream;
+    }).catch((e) => {
+      alert("Oops! Camera failed to start!");
+      console.error(e);
+    });
 
-  // Handle capturing images
+    // Stop the camera stream when component unmounts
+    () => stopCamera(stream);
+  }, []);
 
-  const handleCapture = () => {
-    const capturedData = await capture({ mirror: false }); // Pass true if you want to mirror the captured image (recommended for front camera)
-    console.log("URL:" + capturedData.url);
-    console.log("Blob: " + capturedData.blob);
-  };
-
-  // Your JSX
-
-  if (error) {
-    return <div>Oops!</div>
-  }
   return (
-    <div>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-      />
-      <button onClick={handleCapture}>Capture</button>
-    </div>
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+    />
   );
 }
 ```

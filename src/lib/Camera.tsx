@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { useCamera } from "./useCamera";
-import { CameraElement, CameraHandle } from "./types";
+import { CameraElement, CameraHandle, CapturedImage } from "./types";
 
 import "./style.css";
 
@@ -50,12 +50,68 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   const { className: imgClassName = "", ...otherImgProps } = imgProps;
   const { className: imgBlurClassName = "", ...otherImgBlurProps } = imgBlurProps;
 
-  // 1 - VIDEO STREAM SETUP
+  // 1 - CAMERA STREAM SETUP
 
-  const { stream, error, capture } = useCamera(constraints);
+  const { startCamera, stopCamera } = useCamera();
 
-  const videoBlurRef = useRef<HTMLVideoElement>(null);
+  const cameraConstraints = useMemo<MediaTrackConstraints>(
+    () => ({
+      facingMode: "user",
+      width: { ideal: 1440 },
+      height: { ideal: 1080 },
+      ...constraints,
+    }),
+    [constraints]
+  );
+
+  const [stream, setStream] = useState<MediaStream>();
+  const [appliedConstraintsJson, setAppliedConstraintsJson] = useState<string>(); // Used to check if constraints have changed
+
+  const [error, _setError] = useState<unknown>();
+  const setError = (error: unknown) => {
+    _setError(error);
+    if (error) onError?.(error);
+  };
+
+  // Start the camera when the component mounts or when the constraints change
+  useEffect(() => {
+    // If constraints haven't changed and the camera is already running, do nothing
+    if (JSON.stringify(cameraConstraints) === appliedConstraintsJson) return;
+
+    // If constraints have changed and the camera is running, stop the camera
+    if (stream) {
+      stopCamera(stream);
+      setError(undefined);
+      setStream(undefined);
+      setAppliedConstraintsJson(undefined);
+    }
+
+    // Start the camera with the specified constraints
+    startCamera(cameraConstraints)
+      .then((stream) => {
+        setError(undefined);
+        setStream(stream);
+        setAppliedConstraintsJson(JSON.stringify(cameraConstraints));
+      })
+      .catch((error) => {
+        console.error(error);
+        setError(error);
+        setStream(undefined);
+        setAppliedConstraintsJson(undefined);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraConstraints]);
+
+  // Stop the camera when the component unmounts
+  useEffect(() => {
+    return () => stopCamera(stream);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 2 - VIDEO ELEMENT SETUP
+
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoBlurRef = useRef<HTMLVideoElement>(null);
 
   // Attach the stream to the video element
   useEffect(() => {
@@ -64,22 +120,13 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     if (videoBlurRef.current && fit === "blur") videoBlurRef.current.srcObject = stream;
   }, [stream, fit]);
 
-  // Emit the error to the parent component
-  useEffect(() => {
-    if (error) onError?.(error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
+  // 3 - CAPTURE & CLEAR IMAGE FUNCTION
 
-  // Clean up the stream when the component unmounts
-  useEffect(() => {
-    return () => {
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, [stream]);
+  const [imageDataURL, setImageDataURL] = useState<string | undefined>();
 
   // Check if the camera is front facing
   const isFront = useMemo(() => {
-    const { facingMode } = constraints || {};
+    const { facingMode } = cameraConstraints || {};
     if (Array.isArray(facingMode)) {
       return facingMode.includes("user");
     } else if (typeof facingMode === "string") {
@@ -87,19 +134,45 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     } else {
       return false;
     }
-  }, [constraints]);
+  }, [cameraConstraints]);
 
-  // 2 - CAPTURE & CLEAR IMAGE FUNCTION
+  const handleCapture = useCallback(async (): Promise<CapturedImage | undefined> => {
+    return new Promise((resolve, reject) => {
+      // Validate if stream is active
+      if (stream === undefined || !videoRef.current) {
+        reject("Stream is undefined");
+        return;
+      }
 
-  const [imageDataURL, setImageDataURL] = useState<string | undefined>();
+      // Draw the video frame to the canvas
+      const videoElement = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      if (isFront) {
+        context.scale(-1, 1);
+        context.drawImage(videoElement, 0, 0, canvas.width * -1, canvas.height);
+      } else {
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      }
 
-  const handleCapture = useCallback(async () => {
-    const capturedData = await capture({ mirror: isFront });
-    if (capturedData) {
-      setImageDataURL(capturedData.url);
-    }
-    return capturedData;
-  }, [capture, isFront]);
+      // Set the captured image preview
+      const imgUrl = canvas.toDataURL("image/jpeg");
+      setImageDataURL(imgUrl);
+
+      // Convert the canvas to a blob and resolve the promise
+      canvas.toBlob((blob) => {
+        resolve({
+          url: imgUrl,
+          blob,
+        });
+      });
+
+      // Cleanup
+      canvas.remove();
+    });
+  }, [stream, isFront]);
 
   const handleSetCaptured = useCallback((url: string) => {
     setImageDataURL(url);
@@ -120,7 +193,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     [handleCapture, handleSetCaptured, handleClear]
   );
 
-  // 3 - ERROR JSX
+  // 4 - ERROR JSX
 
   if (error) {
     return (
@@ -130,7 +203,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     );
   }
 
-  // 4 - SUCCESS JSX
+  // 5 - SUCCESS JSX
 
   let objectFitClass = "usecam-fill";
   if (fit === "contain" || fit === "blur") {
