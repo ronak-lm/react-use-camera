@@ -92,7 +92,7 @@ export default function App() {
 
 ## The useCamera() Hook
 
-This give you no UI. You just get a `MediaStream` instance that you have to attach to a `<video />` tag.
+This give you no UI. You just get a `MediaStream` instance that you have to attach to a `<video />` tag. To capture an image, call the hook's `capture` function with the `MediaStream` instance as a parameter.
 
 ```jsx
 import { useEffect, useState, useRef } from "react";
@@ -101,29 +101,50 @@ import { useCamera } from "react-use-camera";
 export const MyCustomCameraComponent = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const { startCamera, stopCamera } = useCamera();
+  const { startCamera, stopCamera, capture } = useCamera();
   const [stream, setStream] = useState<MediaStream>();
 
-  useEffect(() => {
-    // Start the camera stream when component mounts
-    startCamera({ /* MediaTrackConstraints */ }).then((stream) => {
+  const handleStartCamera = async () => {
+    try {
+      const stream = await startCamera({ /* MediaTrackConstraints */ })
       setStream(stream);
       videoRef.current!.srcObject = stream;
-    }).catch((e) => {
+    } catch (e) {
       alert("Oops! Camera failed to start!");
       console.error(e);
-    });
+    }
+  }
 
-    // Stop the camera stream when component unmounts
-    () => stopCamera(stream);
-  }, []);
+  const handleStopCamera = () => {
+    stopCamera(stream);
+  }
+
+  const handleCapture = async () => {
+    if (!stream) return; // Don't capture if the stream isn't active!
+    try {
+      const capturedImage = await capture(stream, {
+        mirror: false // Pass true if you want to mirror the captured image (recommended for front camera)
+      });
+      if (capturedImage) {
+        console.log("URL:" + capturedImage.url);
+        console.log("Blob: " + capturedImage.blob);
+      }
+    } catch {
+      alert("Oops! Unable to capture image. Check if the camera stream is active.");
+    }
+  }
 
   return (
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-    />
+    <div>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+      />
+      <button onClick={handleStartCamera}>Start Camera</button>
+      <button onClick={handleStopCamera}>Stop Camera</button>
+      <button onClick={handleCapture}>Capture</button>
+    </div>
   );
 }
 ```

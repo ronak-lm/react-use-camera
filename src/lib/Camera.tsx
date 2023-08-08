@@ -52,8 +52,25 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
   // 1 - CAMERA STREAM SETUP
 
-  const { startCamera, stopCamera } = useCamera();
+  const { startCamera, stopCamera, capture } = useCamera();
 
+  // MediaStream
+  const streamRef = useRef<MediaStream>(); // Used inside unmount function
+  const [stream, _setStream] = useState<MediaStream>();
+  const setStream = (stream: MediaStream | undefined) => {
+    streamRef.current = stream;
+    _setStream(stream);
+  };
+
+  // MediaStream Error
+  const [error, _setError] = useState<unknown>();
+  const setError = (error: unknown) => {
+    _setError(error);
+    if (error) onError?.(error); // Inform the parent component
+  };
+
+  // Camera Constraints
+  const [appliedConstraintsJson, setAppliedConstraintsJson] = useState<string>(); // Used to track if constraints have changed
   const cameraConstraints = useMemo<MediaTrackConstraints>(
     () => ({
       facingMode: "user",
@@ -63,15 +80,6 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     }),
     [constraints]
   );
-
-  const [stream, setStream] = useState<MediaStream>();
-  const [appliedConstraintsJson, setAppliedConstraintsJson] = useState<string>(); // Used to check if constraints have changed
-
-  const [error, _setError] = useState<unknown>();
-  const setError = (error: unknown) => {
-    _setError(error);
-    if (error) onError?.(error);
-  };
 
   // Start the camera when the component mounts or when the constraints change
   useEffect(() => {
@@ -104,7 +112,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
 
   // Stop the camera when the component unmounts
   useEffect(() => {
-    return () => stopCamera(stream);
+    return () => stopCamera(streamRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -127,8 +135,8 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   // Check if the camera is front facing
   const isFront = useMemo(() => {
     const { facingMode } = cameraConstraints || {};
-    if (Array.isArray(facingMode)) {
-      return facingMode.includes("user");
+    if (Array.isArray(facingMode) && facingMode.length > 0) {
+      return facingMode[0] === "user";
     } else if (typeof facingMode === "string") {
       return facingMode === "user";
     } else {
@@ -137,42 +145,12 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   }, [cameraConstraints]);
 
   const handleCapture = useCallback(async (): Promise<CapturedImage | undefined> => {
-    return new Promise((resolve, reject) => {
-      // Validate if stream is active
-      if (stream === undefined || !videoRef.current) {
-        reject("Stream is undefined");
-        return;
-      }
-
-      // Draw the video frame to the canvas
-      const videoElement = videoRef.current;
-      const canvas = document.createElement("canvas");
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-      if (isFront) {
-        context.scale(-1, 1);
-        context.drawImage(videoElement, 0, 0, canvas.width * -1, canvas.height);
-      } else {
-        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-      }
-
-      // Set the captured image preview
-      const imgUrl = canvas.toDataURL("image/jpeg");
-      setImageDataURL(imgUrl);
-
-      // Convert the canvas to a blob and resolve the promise
-      canvas.toBlob((blob) => {
-        resolve({
-          url: imgUrl,
-          blob,
-        });
-      });
-
-      // Cleanup
-      canvas.remove();
-    });
-  }, [stream, isFront]);
+    const capturedImage = await capture(stream, { mirror: isFront });
+    if (capturedImage) {
+      setImageDataURL(capturedImage.url);
+      return capturedImage;
+    }
+  }, [stream, isFront, capture]);
 
   const handleSetCaptured = useCallback((url: string) => {
     setImageDataURL(url);
