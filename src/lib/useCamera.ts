@@ -38,8 +38,8 @@ export const useCamera = () => {
         video.muted = true;
         video.srcObject = stream;
 
-        // When the video is ready, draw it on a canvas
-        video.addEventListener("loadedmetadata", () => {
+        // When the video is playing, draw it on a canvas
+        video.addEventListener("playing", () => {
           const canvas = document.createElement("canvas");
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
