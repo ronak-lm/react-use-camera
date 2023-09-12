@@ -19,6 +19,7 @@ export type CameraProps = ComponentProps<"div"> & {
   fit?: "fill" | "contain" | "cover" | "blur";
   constraints?: MediaTrackConstraints;
   errorLayout?: ReactNode;
+  onReady?: () => void;
   onError?: (error: unknown) => void;
 
   videoProps?: ComponentProps<"video">;
@@ -33,6 +34,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     fit = "contain",
     constraints,
     errorLayout,
+    onReady,
     onError,
 
     videoProps = {},
@@ -124,8 +126,12 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   // Attach the stream to the video element
   useEffect(() => {
     if (!stream) return;
-    if (videoRef.current) videoRef.current.srcObject = stream;
+    if (videoRef.current) {
+      videoRef.current.addEventListener("playing", () => onReady?.());
+      videoRef.current.srcObject = stream;
+    }
     if (videoBlurRef.current && fit === "blur") videoBlurRef.current.srcObject = stream;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream, fit]);
 
   // 3 - CAPTURE & CLEAR IMAGE FUNCTION

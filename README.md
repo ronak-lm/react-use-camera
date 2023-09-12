@@ -49,6 +49,8 @@ export default function App() {
         className="your-classes-here"
         style={/* width, height, etc */}
         errorLayout={<div>Oops!</div>}
+        onReady={() => console.log("Camera is not visibile to the user")}
+        onError={(e) => console.error("Camera couldn't load :(")}
       />
 
       {/* Add your own UI here... */}
@@ -88,7 +90,12 @@ export default function App() {
     - User denied the camera permission
 
 - **onError**
+
   - Type: `(error: unknown) =>  void`
+
+- **onReady**
+
+  - Type: `() =>  void`
 
 ## The useCamera() Hook
 
