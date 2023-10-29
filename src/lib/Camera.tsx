@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { useCamera } from "./useCamera";
-import { CameraElement, CameraHandle, CapturedImage } from "./types";
+import { CameraElement, CameraHandle, CapturedImage, CaptureSettings } from "./types";
 
 import "./style.css";
 
@@ -150,13 +150,16 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     }
   }, [cameraConstraints]);
 
-  const handleCapture = useCallback(async (): Promise<CapturedImage | undefined> => {
-    const capturedImage = await capture(stream, { mirror: isFront });
-    if (capturedImage) {
-      setImageDataURL(capturedImage.url);
-      return capturedImage;
-    }
-  }, [stream, isFront, capture]);
+  const handleCapture = useCallback(
+    async (settings?: CaptureSettings): Promise<CapturedImage | undefined> => {
+      const capturedImage = await capture({ videoRef }, { mirror: isFront, ...settings });
+      if (capturedImage) {
+        setImageDataURL(capturedImage.url);
+        return capturedImage;
+      }
+    },
+    [isFront, capture]
+  );
 
   const handleSetCaptured = useCallback((url: string) => {
     setImageDataURL(url);

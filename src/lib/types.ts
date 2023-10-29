@@ -8,6 +8,7 @@ export type CameraElement = HTMLDivElement & CameraHandle;
 
 export type CaptureSettings = {
   mirror?: boolean;
+  scale?: number;
 };
 
 export type CapturedImage = {

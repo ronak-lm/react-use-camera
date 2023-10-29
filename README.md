@@ -34,8 +34,12 @@ export default function App() {
 
   const handleCapture = async () => {
     const imageData = await cameraRef.current?.capture(); // Camera view will pause after capture
-    // imageData.url can be used as src for an <img/> tag
-    // imageData.blob contains a blob string to send to your server
+    // imageData.url is a base64 string that can also be used as src for an <img/> tag
+    // imageData.blob is a blob string to send to your server
+
+    // SETTINGS:
+    // Use `cameraRef.current?.capture({ scale: 0.5 });` to scale the captured image to half size
+    // Use `cameraRef.current?.capture({ scale: 2 });` to scale the captured image to double size
   };
 
   const handleClear = () => {
@@ -49,7 +53,7 @@ export default function App() {
         className="your-classes-here"
         style={/* width, height, etc */}
         errorLayout={<div>Oops!</div>}
-        onReady={() => console.log("Camera is not visibile to the user")}
+        onReady={() => console.log("Camera is now visibile to the user")}
         onError={(e) => console.error("Camera couldn't load :(")}
       />
 
@@ -99,7 +103,7 @@ export default function App() {
 
 ## The useCamera() Hook
 
-This give you no UI. You just get a `MediaStream` instance that you have to attach to a `<video />` tag. To capture an image, call the hook's `capture` function with the `MediaStream` instance as a parameter.
+This give you no UI. You just get a `MediaStream` instance that you have to attach to a `<video />` tag. To capture an image, call the hook's `capture` function with the `MediaStream` instance or a ref to the `<video />` tag as a parameter.
 
 ```jsx
 import { useEffect, useState, useRef } from "react";
@@ -129,9 +133,12 @@ export const MyCustomCameraComponent = () => {
   const handleCapture = async () => {
     if (!stream) return; // Don't capture if the stream isn't active!
     try {
-      const capturedImage = await capture(stream, {
-        mirror: false // Pass true if you want to mirror the captured image (recommended for front camera)
+      const capturedImage = await capture({ videoRef }, {
+        mirror: false, // Pass true if you want to mirror the captured image (recommended for front camera)
+        scale: 1, // Change this value to scale up or down the captured image
       });
+      // To capture using MediaStream instead of a videoRef, use can use `await capture({ stream })`
+
       if (capturedImage) {
         console.log("URL:" + capturedImage.url);
         console.log("Blob: " + capturedImage.blob);

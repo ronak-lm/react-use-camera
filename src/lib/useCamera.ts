@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { RefObject, useCallback } from "react";
 import { CaptureSettings, CapturedImage } from "./types";
 
 export const useCamera = () => {
@@ -21,34 +21,46 @@ export const useCamera = () => {
 
   const capture = useCallback(
     (
-      stream: MediaStream | undefined,
+      source: { stream?: MediaStream; videoRef?: RefObject<HTMLVideoElement> },
       settings?: CaptureSettings
     ): Promise<CapturedImage | undefined> => {
       return new Promise((resolve, reject) => {
+        const { stream, videoRef } = source;
+        const { mirror, scale } = {
+          mirror: false,
+          scale: 1,
+          ...settings,
+        };
+
         // Validate if stream is active
-        if (!stream) {
-          reject("Stream is undefined");
+        if (!stream && !videoRef?.current) {
+          reject("Either stream or video is required.");
           return;
         }
 
         // Create a video element and play the stream on it
-        const video = document.createElement("video");
-        video.playsInline = true;
-        video.autoplay = true;
-        video.muted = true;
-        video.srcObject = stream;
+        let myVideo = videoRef?.current;
+        let isVirtualVideoTag = false; // If the video tag is created by this function
+        if (!myVideo) {
+          myVideo = document.createElement("video");
+          myVideo.playsInline = true;
+          myVideo.autoplay = true;
+          myVideo.muted = true;
+          myVideo.srcObject = stream!;
+          isVirtualVideoTag = true;
+        }
 
-        // When the video is playing, draw it on a canvas
-        video.addEventListener("playing", () => {
+        // Helper function that draws the video frame on the canvas and converts it to image
+        const addToCanvasAndCapture = () => {
           const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          canvas.width = myVideo!.videoWidth * scale;
+          canvas.height = myVideo!.videoHeight * scale;
           const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-          if (settings?.mirror) {
+          if (mirror) {
             context.scale(-1, 1);
-            context.drawImage(video, 0, 0, canvas.width * -1, canvas.height);
+            context.drawImage(myVideo!, 0, 0, -1 * canvas.width, canvas.height);
           } else {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            context.drawImage(myVideo!, 0, 0, canvas.width, canvas.height);
           }
 
           // Convert the canvas to a data URL and blob and resolve the promise
@@ -61,10 +73,19 @@ export const useCamera = () => {
           });
 
           // Cleanup
-          video.remove();
           canvas.remove();
-        });
-        video.play();
+          if (isVirtualVideoTag) {
+            myVideo!.remove();
+          }
+        };
+
+        // If the video is already playing, capture the frame, else wait for it to play
+        if (!myVideo.paused) {
+          addToCanvasAndCapture();
+        } else {
+          myVideo.addEventListener("playing", addToCanvasAndCapture);
+          myVideo.play();
+        }
       });
     },
     []
