@@ -37,9 +37,11 @@ export default function App() {
     // imageData.url is a base64 string that can also be used as src for an <img/> tag
     // imageData.blob is a blob string to send to your server
 
-    // SETTINGS:
-    // Use `cameraRef.current?.capture({ scale: 0.5 });` to scale the captured image to half size
-    // Use `cameraRef.current?.capture({ scale: 2 });` to scale the captured image to double size
+    // NOTES:
+    // (i) Use `cameraRef.current?.capture({ mirror: true });` to flip the captured image (will be enabled by default on front camera)
+    // (ii) Use `cameraRef.current?.capture({ width: 512 });` to capture image in 512px width (height will be auto calculated)
+    // (iii) Use `cameraRef.current?.capture({ height: 512 });` to capture image in 512px height (width will be auto calculated)
+    // (iv) If width or height is not specified, your captured image will be of the same size as the camera resolution
   };
 
   const handleClear = () => {
@@ -135,9 +137,13 @@ export const MyCustomCameraComponent = () => {
     try {
       const capturedImage = await capture({ videoRef }, {
         mirror: false, // Pass true if you want to mirror the captured image (recommended for front camera)
-        scale: 1, // Change this value to scale up or down the captured image
       });
-      // To capture using MediaStream instead of a videoRef, use can use `await capture({ stream })`
+
+      // NOTES:
+      // (i) To capture using MediaStream instead of a videoRef, use can use `await capture({ stream })`
+      // (ii) To get the captured image in a custom width, use `await capture({...}, { width: YOUR_REQUIRED_WIDTH })` (height will be auto calculated)
+      // (iii) To get the captured image in a custom height, use `await capture({...}, { height: YOUR_REQUIRED_HEIGHT })` (width will be auto calculated)
+      // (iv) If width or height is not specified, your captured image will be of the same size as the camera resolution
 
       if (capturedImage) {
         console.log("URL:" + capturedImage.url);

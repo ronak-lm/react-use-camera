@@ -1,3 +1,5 @@
+import { RefObject } from "react";
+
 export type CameraHandle = {
   capture: (settings?: CaptureSettings) => Promise<CapturedImage | undefined>;
   setCaptured: (url: string) => void;
@@ -6,9 +8,15 @@ export type CameraHandle = {
 
 export type CameraElement = HTMLDivElement & CameraHandle;
 
+export type CaptureSource = {
+  stream?: MediaStream;
+  videoRef?: RefObject<HTMLVideoElement>;
+};
+
 export type CaptureSettings = {
   mirror?: boolean;
-  scale?: number;
+  width?: number; // Either width or height must be specified
+  height?: number;
 };
 
 export type CapturedImage = {

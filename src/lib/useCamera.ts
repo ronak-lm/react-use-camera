@@ -1,5 +1,5 @@
-import { RefObject, useCallback } from "react";
-import { CaptureSettings, CapturedImage } from "./types";
+import { useCallback } from "react";
+import { CaptureSettings, CaptureSource, CapturedImage } from "./types";
 
 export const useCamera = () => {
   const startCamera = useCallback(async (constraints?: MediaTrackConstraints) => {
@@ -20,17 +20,10 @@ export const useCamera = () => {
   }, []);
 
   const capture = useCallback(
-    (
-      source: { stream?: MediaStream; videoRef?: RefObject<HTMLVideoElement> },
-      settings?: CaptureSettings
-    ): Promise<CapturedImage | undefined> => {
+    (source: CaptureSource, settings: CaptureSettings = {}): Promise<CapturedImage | undefined> => {
       return new Promise((resolve, reject) => {
         const { stream, videoRef } = source;
-        const { mirror, scale } = {
-          mirror: false,
-          scale: 1,
-          ...settings,
-        };
+        const { mirror, width, height } = settings;
 
         // Validate if stream is active
         if (!stream && !videoRef?.current) {
@@ -53,8 +46,23 @@ export const useCamera = () => {
         // Helper function that draws the video frame on the canvas and converts it to image
         const addToCanvasAndCapture = () => {
           const canvas = document.createElement("canvas");
-          canvas.width = myVideo!.videoWidth * scale;
-          canvas.height = myVideo!.videoHeight * scale;
+          // Width specified, calculate height
+          if (typeof width === "number") {
+            canvas.width = width;
+            canvas.height = myVideo!.videoHeight * (width / myVideo!.videoWidth);
+          }
+          // Height specified, calculate width
+          else if (typeof height === "number") {
+            canvas.width = myVideo!.videoWidth * (height / myVideo!.videoHeight);
+            canvas.height = height;
+          }
+          // No width or height specified, use video width and height
+          else {
+            canvas.width = myVideo!.videoWidth;
+            canvas.height = myVideo!.videoHeight;
+          }
+
+          // Draw the video frame on the canvas
           const context = canvas.getContext("2d") as CanvasRenderingContext2D;
           if (mirror) {
             context.scale(-1, 1);
