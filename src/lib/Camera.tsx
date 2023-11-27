@@ -76,8 +76,8 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   const cameraConstraints = useMemo<MediaTrackConstraints>(
     () => ({
       facingMode: "user",
-      width: { ideal: 1440 },
-      height: { ideal: 1080 },
+      width: { ideal: 1920 },
+      height: { ideal: 1920 },
       ...constraints,
     }),
     [constraints]
