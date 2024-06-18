@@ -40,6 +40,8 @@ export const useCamera = () => {
           myVideo.autoplay = true;
           myVideo.muted = true;
           myVideo.srcObject = stream!;
+          myVideo.style.display = "none";
+          document.body.appendChild(myVideo);
           isVirtualVideoTag = true;
         }
 
@@ -61,6 +63,9 @@ export const useCamera = () => {
             canvas.width = myVideo!.videoWidth;
             canvas.height = myVideo!.videoHeight;
           }
+          // Add to DOM
+          canvas.style.display = "none";
+          document.body.appendChild(canvas);
 
           // Draw the video frame on the canvas
           const context = canvas.getContext("2d") as CanvasRenderingContext2D;
