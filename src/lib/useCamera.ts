@@ -1,5 +1,8 @@
 import { useCallback } from "react";
-import { CaptureSettings, CaptureSource, CapturedImage } from "./types";
+import { CaptureSettings, CapturedImage } from "./types";
+
+// Global MediaStream Instance
+let stream: MediaStream | undefined = undefined;
 
 export const useCamera = () => {
   const startCamera = useCallback(async (constraints?: MediaTrackConstraints) => {
@@ -7,27 +10,32 @@ export const useCamera = () => {
     const isSupported = "mediaDevices" in navigator && "getUserMedia" in navigator.mediaDevices;
     if (!isSupported) throw new Error("Camera not supported");
 
-    // Load the stream
-    const stream = await navigator.mediaDevices.getUserMedia({
+    // Stop the camera if it is already running
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      stream = undefined;
+    }
+
+    // Start the camera and return the stream
+    stream = await navigator.mediaDevices.getUserMedia({
       video: constraints,
     });
     return stream;
   }, []);
 
-  const stopCamera = useCallback((stream: MediaStream | undefined) => {
+  const stopCamera = useCallback(() => {
     if (!stream) return;
     stream.getTracks().forEach((track) => track.stop());
   }, []);
 
   const capture = useCallback(
-    (source: CaptureSource, settings: CaptureSettings = {}): Promise<CapturedImage | undefined> => {
+    (settings: CaptureSettings = {}): Promise<CapturedImage | undefined> => {
       return new Promise((resolve, reject) => {
-        const { stream, videoRef } = source;
-        const { mirror, width, height } = settings;
+        const { videoRef, mirror, width, height } = settings;
 
         // Validate if stream is active
         if (!stream && !videoRef?.current) {
-          reject("Either stream or video is required.");
+          reject("No source provided...");
           return;
         }
 
@@ -37,6 +45,7 @@ export const useCamera = () => {
         if (!myVideo) {
           myVideo = document.createElement("video");
           myVideo.playsInline = true;
+          myVideo.disablePictureInPicture = true;
           myVideo.autoplay = true;
           myVideo.muted = true;
           myVideo.srcObject = stream!;

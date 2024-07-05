@@ -8,12 +8,8 @@ export type CameraHandle = {
 
 export type CameraElement = HTMLDivElement & CameraHandle;
 
-export type CaptureSource = {
-  stream?: MediaStream;
-  videoRef?: RefObject<HTMLVideoElement>;
-};
-
 export type CaptureSettings = {
+  videoRef?: RefObject<HTMLVideoElement>; // If not passed, the global stream will be used
   mirror?: boolean;
   width?: number; // Either width or height must be specified
   height?: number;
