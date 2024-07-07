@@ -87,7 +87,7 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   };
 
   // Camera Management
-  const { startCamera, stopCamera, capture } = useCamera();
+  const { startCamera, capture, startRecording, getRecordedVideo, stopRecording } = useCamera();
 
   // Start the camera when the component mounts or when the constraints change
   useEffect(() => {
@@ -102,11 +102,9 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
           videoRef.current.onplaying = () => informCameraReady();
           videoRef.current.oncanplay = () => informCameraReady();
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
         }
         if (fit === "blur" && videoBlurRef.current) {
           videoBlurRef.current.srcObject = stream;
-          videoBlurRef.current.play();
         }
         setError(undefined); // Clear any previous errors
         setAppliedConstraintsJson(JSON.stringify(cameraConstraints)); // Track the applied constraints
@@ -118,12 +116,6 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraConstraints]);
-
-  // Stop the camera when the component unmounts
-  useEffect(() => {
-    return () => stopCamera();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // 3 - CAPTURE & CLEAR IMAGE FUNCTION
 
@@ -142,12 +134,14 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
   }, [cameraConstraints]);
 
   const handleCapture = useCallback(
-    async (settings?: CaptureSettings): Promise<CapturedImage | undefined> => {
+    async (settings?: CaptureSettings): Promise<CapturedImage> => {
+      // Try to capture image
       const capturedImage = await capture({ videoRef, mirror: isFront, ...settings });
-      if (capturedImage) {
-        setImageDataURL(capturedImage.url);
-        return capturedImage;
-      }
+      if (!capturedImage) throw new Error("Unable to capture image");
+
+      // Return captured data
+      setImageDataURL(capturedImage.url);
+      return capturedImage;
     },
     [isFront, capture]
   );
@@ -160,15 +154,18 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     setImageDataURL(undefined);
   }, []);
 
-  // Expose the capture and clear functions to the parent component
+  // Expose the capture, record, etc functions to the parent
   useImperativeHandle(
     ref as ForwardedRef<CameraHandle>,
     () => ({
       capture: handleCapture,
       setCaptured: handleSetCaptured,
       clear: handleClear,
+      startRecording,
+      getRecordedVideo,
+      stopRecording,
     }),
-    [handleCapture, handleSetCaptured, handleClear]
+    [handleCapture, handleSetCaptured, handleClear, startRecording, getRecordedVideo, stopRecording]
   );
 
   // 4 - ERROR JSX

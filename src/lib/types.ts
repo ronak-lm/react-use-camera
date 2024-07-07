@@ -1,9 +1,13 @@
 import { RefObject } from "react";
 
 export type CameraHandle = {
-  capture: (settings?: CaptureSettings) => Promise<CapturedImage | undefined>;
+  capture: (settings?: CaptureSettings) => Promise<CapturedImage>;
   setCaptured: (url: string) => void;
   clear: () => void;
+
+  startRecording: (params?: VideoCaptureParams) => MediaRecorder;
+  getRecordedVideo: () => Promise<CapturedVideo>;
+  stopRecording: () => Promise<CapturedVideo>;
 };
 
 export type CameraElement = HTMLDivElement & CameraHandle;
@@ -15,7 +19,17 @@ export type CaptureSettings = {
   height?: number;
 };
 
+export type VideoCaptureParams = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onDataAvailable: (ev: BlobEvent) => any;
+};
+
 export type CapturedImage = {
   url: string;
   blob: Blob | null;
+};
+
+export type CapturedVideo = {
+  url: string;
+  blob: Blob;
 };

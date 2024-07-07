@@ -36,6 +36,28 @@ export default function App() {
     ref.current?.clear();
   };
 
+  // 3 - RECORDING
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedURL, setRecordedURL] = useState<string>();
+
+  const handleStartRecording = async () => {
+    setRecordedURL(undefined);
+    setIsRecording(true);
+    ref.current?.startRecording();
+  };
+
+  const handleStopRecording = async () => {
+    const { blob, url } = await ref.current!.stopRecording();
+    console.log(blob);
+    setRecordedURL(url);
+    setIsRecording(false);
+  };
+
+  const handleViewRecordedVideo = () => {
+    window.open(recordedURL, "_blank");
+  };
+
   // 3 - JSX
 
   return (
@@ -87,9 +109,15 @@ export default function App() {
       <button onClick={() => setHeight(2048)}>2048px</button>
 
       <hr />
-      <div style={{ marginBottom: "4px" }}>Actions</div>
+      <div style={{ marginBottom: "4px" }}>Photo Actions</div>
       <button onClick={handleCapture}>Capture</button>
       <button onClick={handleClear}>Clear</button>
+
+      <hr />
+      <div style={{ marginBottom: "4px" }}>Video Actions: {isRecording && "Recording"}</div>
+      <button onClick={handleStartRecording}>Start Recording</button>
+      <button onClick={handleStopRecording}>Stop Recording</button>
+      {recordedURL && <button onClick={handleViewRecordedVideo}>View Recorded Video</button>}
     </div>
   );
 }
