@@ -154,6 +154,13 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
     setImageDataURL(undefined);
   }, []);
 
+  const handleStartRecording = useCallback(
+    (settings?: CaptureSettings): MediaRecorder => {
+      return startRecording({ videoRef, mirror: isFront, ...settings });
+    },
+    [isFront, startRecording]
+  );
+
   // Expose the capture, record, etc functions to the parent
   useImperativeHandle(
     ref as ForwardedRef<CameraHandle>,
@@ -161,11 +168,18 @@ export default forwardRef<CameraElement, CameraProps>(function Camera(
       capture: handleCapture,
       setCaptured: handleSetCaptured,
       clear: handleClear,
-      startRecording,
+      startRecording: handleStartRecording,
       getRecordedVideo,
       stopRecording,
     }),
-    [handleCapture, handleSetCaptured, handleClear, startRecording, getRecordedVideo, stopRecording]
+    [
+      handleCapture,
+      handleSetCaptured,
+      handleClear,
+      handleStartRecording,
+      getRecordedVideo,
+      stopRecording,
+    ]
   );
 
   // 4 - ERROR JSX

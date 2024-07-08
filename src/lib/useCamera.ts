@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { CaptureSettings, VideoCaptureParams, CapturedImage, CapturedVideo } from "./types";
+import { CaptureSettings, VideoCaptureSettings, CapturedImage, CapturedVideo } from "./types";
 
 // Global MediaStream Instance
 let stream: MediaStream | undefined = undefined;
@@ -8,6 +8,9 @@ let stream: MediaStream | undefined = undefined;
 
 let recorder: MediaRecorder | undefined = undefined;
 let recordedData: Blob[] | undefined = undefined;
+let recordingRequestId: number | undefined = undefined; // Used to cancel the requestAnimationFrame
+let recordingVideoElement: HTMLVideoElement | undefined = undefined;
+let recordingCanvasElement: HTMLCanvasElement | undefined = undefined;
 
 const getRecordedDataAsVideo = () => {
   return new Promise<CapturedVideo>((resolve, reject) => {
@@ -28,7 +31,20 @@ const stopExistingCameraStreams = () => {
 };
 
 const stopExistingRecordings = () => {
-  if (recorder) recorder.stop();
+  if (recordingRequestId) cancelAnimationFrame(recordingRequestId);
+  recordingRequestId = undefined;
+
+  if (recordingCanvasElement) {
+    recordingCanvasElement.remove();
+    recordingCanvasElement = undefined;
+  }
+
+  if (recordingVideoElement) {
+    recordingVideoElement.remove();
+    recordingVideoElement = undefined;
+  }
+
+  if (recorder && recorder.state !== "inactive") recorder.stop();
   recorder = undefined;
   recordedData = undefined;
 };
@@ -89,8 +105,13 @@ export const useCamera = () => {
       // Helper function that draws the video frame on the canvas and converts it to image
       const addToCanvasAndCapture = () => {
         const canvas = document.createElement("canvas");
+        // Both width and height specified (aspect ratio might change)
+        if (typeof width === "number" && typeof height === "number") {
+          canvas.width = width;
+          canvas.height = height;
+        }
         // Width specified, calculate height
-        if (typeof width === "number") {
+        else if (typeof width === "number") {
           canvas.width = width;
           canvas.height = myVideo!.videoHeight * (width / myVideo!.videoWidth);
         }
@@ -145,23 +166,80 @@ export const useCamera = () => {
 
   // 3 - VIDEO CAPTURE
 
-  const startRecording = useCallback((params?: VideoCaptureParams) => {
-    // Check if the camera is started
-    if (!stream) throw new Error("Camera not started");
+  const startRecording = useCallback((params?: VideoCaptureSettings) => {
+    const { videoRef, mirror, width, height, frameRate, onDataAvailable } = params || {};
 
     // Check if the browser supports the MediaRecorder API
     const isSupported = "MediaRecorder" in window;
     if (!isSupported) throw new Error("Recording not supported");
 
+    // Check if source is provided for capture
+    if (!stream && !videoRef?.current) throw new Error("No source provided for recording");
+
     // Stop the recording if it is already running
     stopExistingRecordings();
 
+    // Create a video element (if not provided) and play the stream on it
+    let myVideo = videoRef?.current;
+    if (!myVideo) {
+      myVideo = document.createElement("video");
+      myVideo.playsInline = true;
+      myVideo.autoplay = true;
+      myVideo.muted = true;
+      myVideo.srcObject = stream!;
+      myVideo.style.display = "none";
+      document.body.appendChild(myVideo);
+      recordingVideoElement = myVideo;
+    }
+
+    // Prepare canvas for resizing video
+    const canvas = document.createElement("canvas");
+    // Both width and height specified (aspect ratio might change)
+    if (typeof width === "number" && typeof height === "number") {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    // Width specified, calculate height
+    else if (typeof width === "number") {
+      canvas.width = width;
+      canvas.height = myVideo!.videoHeight * (width / myVideo!.videoWidth);
+    }
+    // Height specified, calculate width
+    else if (typeof height === "number") {
+      canvas.width = myVideo!.videoWidth * (height / myVideo!.videoHeight);
+      canvas.height = height;
+    }
+    // No width or height specified, use video width and height
+    else {
+      canvas.width = myVideo!.videoWidth;
+      canvas.height = myVideo!.videoHeight;
+    }
+    // Add to DOM
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+    recordingCanvasElement = canvas;
+
+    // Render video on the canvas
+    const context = canvas.getContext("2d")!;
+    const renderVideoOnCanvas = () => {
+      if (mirror) {
+        context.scale(-1, 1);
+        context.drawImage(myVideo, 0, 0, -1 * canvas.width, canvas.height);
+      } else {
+        context.drawImage(myVideo, 0, 0, canvas.width, canvas.height);
+      }
+      // Render on every frame
+      recordingRequestId = requestAnimationFrame(renderVideoOnCanvas);
+    };
+    renderVideoOnCanvas(); // Render initial frame
+
     // Start recording
-    recorder = new MediaRecorder(stream);
+    const canvasStream = canvas.captureStream(frameRate);
+    recorder = new MediaRecorder(canvasStream);
     recorder.ondataavailable = (e) => {
       if (!recordedData) recordedData = [];
       recordedData.push(e.data);
-      params?.onDataAvailable(e);
+      onDataAvailable?.(e);
     };
     recorder.start();
     return recorder;
@@ -175,10 +253,7 @@ export const useCamera = () => {
       recorder.onstop = async () => {
         const video = await getRecordedDataAsVideo();
         resolve(video);
-
-        // Cleanup
-        recorder = undefined;
-        recordedData = undefined;
+        stopExistingRecordings(); // Cleanup
       };
 
       // Stop the recording

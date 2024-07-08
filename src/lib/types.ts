@@ -5,7 +5,7 @@ export type CameraHandle = {
   setCaptured: (url: string) => void;
   clear: () => void;
 
-  startRecording: (params?: VideoCaptureParams) => MediaRecorder;
+  startRecording: (params?: VideoCaptureSettings) => MediaRecorder;
   getRecordedVideo: () => Promise<CapturedVideo>;
   stopRecording: () => Promise<CapturedVideo>;
 };
@@ -15,13 +15,18 @@ export type CameraElement = HTMLDivElement & CameraHandle;
 export type CaptureSettings = {
   videoRef?: RefObject<HTMLVideoElement>; // If not passed, the global stream will be used
   mirror?: boolean;
-  width?: number; // Either width or height must be specified
+  width?: number;
   height?: number;
 };
 
-export type VideoCaptureParams = {
+export type VideoCaptureSettings = {
+  videoRef?: RefObject<HTMLVideoElement>; // If not passed, the global stream will be used
+  mirror?: boolean;
+  width?: number;
+  height?: number;
+  frameRate?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onDataAvailable: (ev: BlobEvent) => any;
+  onDataAvailable?: (ev: BlobEvent) => any;
 };
 
 export type CapturedImage = {

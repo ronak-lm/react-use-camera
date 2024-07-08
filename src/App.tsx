@@ -7,21 +7,9 @@ export default function App() {
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [fit, setFit] = useState<"fill" | "contain" | "cover" | "blur">("blur");
 
-  const [width, _setWidth] = useState<number>();
-  const setWidth = (width: number | undefined) => {
-    if (width !== undefined) {
-      _setHeight(undefined);
-    }
-    _setWidth(width);
-  };
-
-  const [height, _setHeight] = useState<number>();
-  const setHeight = (height: number | undefined) => {
-    if (height !== undefined) {
-      _setWidth(undefined);
-    }
-    _setHeight(height);
-  };
+  const [width, setWidth] = useState<number>();
+  const [height, setHeight] = useState<number>();
+  const [frameRate, setFrameRate] = useState<number>();
 
   // 2 - CAPTURE
 
@@ -44,7 +32,7 @@ export default function App() {
   const handleStartRecording = async () => {
     setRecordedURL(undefined);
     setIsRecording(true);
-    ref.current?.startRecording();
+    ref.current?.startRecording({ width, height, frameRate });
   };
 
   const handleStopRecording = async () => {
@@ -89,9 +77,7 @@ export default function App() {
       <button onClick={() => setFit("blur")}>Blur</button>
 
       <hr />
-      <div style={{ marginBottom: "4px" }}>
-        Captured Image Width ({width ? width + "px" : "Default"})
-      </div>
+      <div style={{ marginBottom: "4px" }}>Capture Width: {width ? width + "px" : "Default"}</div>
       <button onClick={() => setWidth(undefined)}>Default</button>
       <button onClick={() => setWidth(256)}>256px</button>
       <button onClick={() => setWidth(512)}>512px</button>
@@ -100,7 +86,7 @@ export default function App() {
 
       <hr />
       <div style={{ marginBottom: "4px" }}>
-        Captured Image Height ({height ? height + "px" : "Default"})
+        Capture Height: {height ? height + "px" : "Default"}
       </div>
       <button onClick={() => setHeight(undefined)}>Default</button>
       <button onClick={() => setHeight(256)}>256px</button>
@@ -109,12 +95,23 @@ export default function App() {
       <button onClick={() => setHeight(2048)}>2048px</button>
 
       <hr />
+
+      <div style={{ marginBottom: "4px" }}>
+        Frame Rate (for Recording): {frameRate ?? "Default"}
+      </div>
+      <button onClick={() => setFrameRate(undefined)}>Default</button>
+      <button onClick={() => setFrameRate(10)}>10</button>
+      <button onClick={() => setFrameRate(20)}>20</button>
+      <button onClick={() => setFrameRate(30)}>30</button>
+      <button onClick={() => setFrameRate(60)}>60</button>
+
+      <hr />
       <div style={{ marginBottom: "4px" }}>Photo Actions</div>
       <button onClick={handleCapture}>Capture</button>
       <button onClick={handleClear}>Clear</button>
 
       <hr />
-      <div style={{ marginBottom: "4px" }}>Video Actions: {isRecording && "Recording"}</div>
+      <div style={{ marginBottom: "4px" }}>Video Actions{isRecording && ": Recording"}</div>
       <button onClick={handleStartRecording}>Start Recording</button>
       <button onClick={handleStopRecording}>Stop Recording</button>
       {recordedURL && <button onClick={handleViewRecordedVideo}>View Recorded Video</button>}
