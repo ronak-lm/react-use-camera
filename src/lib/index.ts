@@ -7,7 +7,7 @@ export type {
   CameraHandle,
   CameraElement,
   CaptureSettings,
-  VideoCaptureParams,
+  VideoCaptureSettings,
   CapturedImage,
   CapturedVideo,
 } from "./types";
